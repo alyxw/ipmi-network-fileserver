@@ -66,26 +66,63 @@ def index():
 
     return render_template_string('''
         <!doctype html>
-        <title>alyx's cool ipmi network file hosting</title>
-        <h1>alyx's cool ipmi network file hosting</h1>
-        <p>enter the URL of a file on the internet. it will be downloaded to this and served for use within the IPMI network. files will expire and be automatically removed after 3 days.</p>
-        <form method="post">
-            <input type="text" name="file_url" placeholder="Enter URL" required>
-            <button type="submit">Download</button>
-        </form>
-        <h3>Available Files:</h3>
-        <div id="file-list"></div>
-        
-        <p>for comments, questions and complaints, contact alyx</p>
-        <script>
-            function fetchFileList() {
-                fetch('/files').then(response => response.text()).then(data => {
-                    document.getElementById('file-list').innerHTML = data;
-                });
-            }
-            setInterval(fetchFileList, 5000);
-            fetchFileList();
-        </script>
+<title>alyx's cool ipmi network file hosting</title>
+<h1>alyx's cool ipmi network file hosting</h1>
+<style>
+    table, th, td {
+        border: 1px solid black;
+        border-collapse: collapse;
+    }
+
+    td {
+        padding: 4px
+    }
+</style>
+
+<p>enter the URL of a file on the internet. it will be downloaded to this and served for use within the IPMI network.
+    files will expire and be automatically removed after 3 days.</p>
+<form method="post">
+    <input type="text" name="file_url" placeholder="Enter URL" required>
+    <button type="submit">Download</button>
+</form>
+<h3>Available Files:</h3>
+<table>
+    <thead>
+    <td>
+        <b>Filename</b>
+    </td>
+    <td>
+        <b>Size</b>
+    </td>
+    <td>
+        <b>Status</b>
+    </td>
+    <td>
+        <b>Expiry</b>
+    </td>
+    <td>
+        <b>SHA256 Checksum</b>
+    </td>
+    </thead>
+    <tbody id="file-list">
+    </tbody>
+</table>
+<!--<a href='/iso/{filename}'>{filename}</a> ({round(size / 1000000)}MB) - {status} - Expires in {hours_left}h {minutes_left}m - SHA256: {sha256_hash}-->
+<p>for comments, questions and complaints, contact alyx</p>
+<h3>other services available</h3>
+<ul>
+    <li>downloads.dell.com HTTP proxy (port 3355)
+</ul>
+<script>
+    function fetchFileList() {
+        fetch('/files').then(response => response.text()).then(data => {
+            document.getElementById('file-list').innerHTML = data;
+        });
+    }
+
+    setInterval(fetchFileList, 750);
+    fetchFileList();
+</script>
     ''')
 
 
@@ -100,12 +137,17 @@ def file_list():
             time_remaining = max(0, 72 * 3600 - (current_time - timestamp))
             hours_left = int(time_remaining // 3600)
             minutes_left = int((time_remaining % 3600) // 60)
-            sha256_hash = calculate_sha256(file_path) if not filename.endswith(".part") else "Calculating..."
+            size = os.path.getsize(file_path);
+            sha256_hash = calculate_sha256(file_path) if not filename.endswith(".part") else "Not ready..."
             status = "Downloaded" if not filename.endswith(".part") else "Downloading..."
-            file_list.append(
-                f"<a href='/iso/{filename}'>{filename}</a> - {status} - Expires in {hours_left}h {minutes_left}m - SHA256: {sha256_hash}")
+            if (status == "Downloaded"):
+                file_list.append(
+                    f"<tr> <td><a href='/iso/{filename}'>{filename}</a></td> <td>{round(size / 1000000)}MB</td> <td>{status}</td> <td>Expires in {hours_left}h {minutes_left}m</td> <td>{sha256_hash}</td> </tr>")
+            else:
+                file_list.append(
+                    f"<tr> <td>{filename}</td> <td>{round(size / 1000000)}MB</td> <td>{status}</td> <td>Expires in {hours_left}h {minutes_left}m</td> <td>{sha256_hash}</td> </tr>")
 
-    return "<br>".join(file_list)
+    return "".join(file_list)
 
 
 @app.route('/iso/<filename>')
