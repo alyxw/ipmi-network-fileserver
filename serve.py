@@ -81,6 +81,7 @@ def index():
 
 <p>enter the URL of a file on the internet. it will be downloaded to this and served for use within the IPMI network.
     files will expire and be automatically removed after 3 days.</p>
+    <p><b>files uploaded here will be available to anyone on the IPMI network. do not use this to serve sensitive information</b></p>
 <form method="post">
     <input type="text" name="file_url" placeholder="Enter URL" required>
     <button type="submit">Download</button>
@@ -111,7 +112,7 @@ def index():
 <p>for comments, questions and complaints, contact alyx</p>
 <h3>other services available</h3>
 <ul>
-    <li>downloads.dell.com HTTP proxy (port 3355)
+    <!--<li>downloads.dell.com HTTP proxy (port 3355)-->
 </ul>
 <script>
     function fetchFileList() {
@@ -138,7 +139,7 @@ def file_list():
             hours_left = int(time_remaining // 3600)
             minutes_left = int((time_remaining % 3600) // 60)
             size = os.path.getsize(file_path);
-            sha256_hash = calculate_sha256(file_path) if not filename.endswith(".part") else "Not ready..."
+            sha256_hash = "Not ready..."
             status = "Downloaded" if not filename.endswith(".part") else "Downloading..."
             if (status == "Downloaded"):
                 file_list.append(
@@ -169,4 +170,4 @@ def serve_iso(filename):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=6999)
+    app.run(debug=True, host='0.0.0.0', port=8081)
