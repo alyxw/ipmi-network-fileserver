@@ -75,6 +75,8 @@ def index():
         </form>
         <h3>Available Files:</h3>
         <div id="file-list"></div>
+        
+        <p>for comments, questions and complaints, contact alyx</p>
         <script>
             function fetchFileList() {
                 fetch('/files').then(response => response.text()).then(data => {
