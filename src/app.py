@@ -7,7 +7,7 @@ import hashlib
 from urllib.parse import urlparse
 
 app = Flask(__name__)
-DOWNLOAD_FOLDER = "./iso_files"
+DOWNLOAD_FOLDER = "./iso"
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
 
@@ -58,14 +58,9 @@ def index():
         file_url = request.form.get('file_url')
         if not file_url:
             return "No URL provided", 400
-
         filename = os.path.basename(urlparse(file_url).path)
-
-        # Start downloading the file in a background thread
         threading.Thread(target=download_iso, args=(file_url, filename), daemon=True).start()
-
         return redirect(url_for('index'))
-
     return render_template_string(template)
 
 
@@ -81,9 +76,9 @@ def file_list():
             hours_left = int(time_remaining // 3600)
             minutes_left = int((time_remaining % 3600) // 60)
             size = os.path.getsize(file_path);
-            sha256_hash = "Not ready..."
-            status = "Downloaded" if not filename.endswith(".part") else "Downloading..."
-            if (status == "Downloaded"):
+            sha256_hash = "Not ready..."  # currently disabled because sha256 sums take too long to generate for large files, need to figure out how to go about caching this. might have to make a separate file containing the sha hash that's generated upon download completion.
+            status = "Ready" if not filename.endswith(".part") else "Downloading..."
+            if (status == "Ready"):
                 file_list.append(
                     f"<tr> <td><a href='/iso/{filename}'>{filename}</a></td> <td>{round(size / 1000000)}MB</td> <td>{status}</td> <td>Expires in {hours_left}h {minutes_left}m</td> <td>{sha256_hash}</td> </tr>")
             else:
