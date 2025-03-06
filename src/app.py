@@ -25,17 +25,6 @@ def cleanup_files():
 threading.Thread(target=cleanup_files, daemon=True).start()
 
 
-def calculate_sha256(file_path):
-    sha256_hash = hashlib.sha256()
-    try:
-        with open(file_path, "rb") as f:
-            for byte_block in iter(lambda: f.read(4096), b""):
-                sha256_hash.update(byte_block)
-        return sha256_hash.hexdigest()
-    except FileNotFoundError:
-        return "Calculating..."
-
-
 def download_iso(file_url, filename):
     file_path = os.path.join(DOWNLOAD_FOLDER, filename)
     temp_file_path = file_path + ".part"
