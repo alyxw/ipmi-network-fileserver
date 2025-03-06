@@ -4,6 +4,7 @@ import threading
 import time
 import requests
 import io, hashlib, hmac
+import shutil
 
 from urllib.parse import urlparse
 
@@ -26,7 +27,7 @@ def cleanup_files():
             file_path = os.path.join(HASH_FOLDER, file)
             if os.path.isfile(file_path) and current_time - os.path.getctime(file_path) > 72 * 3600:
                 os.remove(file_path)
-        time.sleep(3600)  # Check every hour
+        time.sleep(60)  # Check every minute
 
 
 threading.Thread(target=cleanup_files, daemon=True).start()
@@ -78,6 +79,7 @@ def index():
         filename = os.path.basename(urlparse(file_url).path)
         threading.Thread(target=download_iso, args=(file_url, filename), daemon=True).start()
         return redirect(url_for('index'))
+
     return render_template_string(template)
 
 
@@ -113,6 +115,12 @@ def file_list():
                     f"<tr> <td>{filename}</td> <td>{round(size / 1000000)}MB</td> <td>{status}</td> <td>Expires in {hours_left}h {minutes_left}m</td> <td>{sha256_hash}</td> </tr>")
 
     return "".join(file_list)
+
+
+@app.route('/diskspace')
+def diskspace():
+    total, used, freespace = shutil.disk_usage("/")
+    return f"{freespace // (2 ** 30)}"
 
 
 if __name__ == '__main__':

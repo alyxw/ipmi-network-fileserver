@@ -27,6 +27,9 @@
     </form>
 </div>
 <div>
+    <p onclick="fetchDiskSpace()">Free space available on the server is: <span id="freespace">unknown</span>GB</p>
+</div>
+<div>
     <h3>Available Files:</h3>
     <table>
         <tr>
@@ -62,7 +65,15 @@
             document.getElementById('file-list').innerHTML = data;
         });
     }
+
+    function fetchDiskSpace() {
+        fetch('/diskspace').then(response => response.text()).then(data => {
+            document.getElementById('freespace').innerHTML = data;
+        });
+    }
+
     //refresh page every 1s
     setInterval(fetchFileList, 1000);
     fetchFileList();
+    fetchDiskSpace();
 </script>
