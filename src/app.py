@@ -103,7 +103,7 @@ def file_list():
                 if (status == "Downloading..."):
                     sha256_hash = "not yet generated"
                 else:
-                    sha256_hash = "Error generating hash"
+                    sha256_hash = "Error generating hash or not yet finished"
 
             if (status == "Ready"):
                 file_list.append(
