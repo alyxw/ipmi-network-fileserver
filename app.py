@@ -52,6 +52,8 @@ def download_iso(file_url, filename):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    with open("index.template.html", "r") as file:
+        template = file.read()
     if request.method == 'POST':
         file_url = request.form.get('file_url')
         if not file_url:
@@ -64,67 +66,7 @@ def index():
 
         return redirect(url_for('index'))
 
-    return render_template_string('''
-        <!doctype html>
-<title>alyx's cool ipmi network file hosting</title>
-<h1>alyx's cool ipmi network file hosting</h1>
-<style>
-    table, th, td {
-        border: 1px solid black;
-        border-collapse: collapse;
-    }
-
-    td {
-        padding: 4px
-    }
-</style>
-
-<p>enter the URL of a file on the internet. it will be downloaded to this and served for use within the IPMI network.
-    files will expire and be automatically removed after 3 days.</p>
-    <p><b>files uploaded here will be available to anyone on the IPMI network. do not use this to serve sensitive information</b></p>
-<form method="post">
-    <input type="text" name="file_url" placeholder="Enter URL" required>
-    <button type="submit">Download</button>
-</form>
-<h3>Available Files:</h3>
-<table>
-    <thead>
-    <td>
-        <b>Filename</b>
-    </td>
-    <td>
-        <b>Size</b>
-    </td>
-    <td>
-        <b>Status</b>
-    </td>
-    <td>
-        <b>Expiry</b>
-    </td>
-    <td>
-        <b>SHA256 Checksum</b>
-    </td>
-    </thead>
-    <tbody id="file-list">
-    </tbody>
-</table>
-<!--<a href='/iso/{filename}'>{filename}</a> ({round(size / 1000000)}MB) - {status} - Expires in {hours_left}h {minutes_left}m - SHA256: {sha256_hash}-->
-<p>for comments, questions and complaints, contact alyx</p>
-<h3>other services available</h3>
-<ul>
-    <!--<li>downloads.dell.com HTTP proxy (port 3355)-->
-</ul>
-<script>
-    function fetchFileList() {
-        fetch('/files').then(response => response.text()).then(data => {
-            document.getElementById('file-list').innerHTML = data;
-        });
-    }
-
-    setInterval(fetchFileList, 750);
-    fetchFileList();
-</script>
-    ''')
+    return render_template_string(template)
 
 
 @app.route('/files')
@@ -149,24 +91,6 @@ def file_list():
                     f"<tr> <td>{filename}</td> <td>{round(size / 1000000)}MB</td> <td>{status}</td> <td>Expires in {hours_left}h {minutes_left}m</td> <td>{sha256_hash}</td> </tr>")
 
     return "".join(file_list)
-
-
-@app.route('/iso/<filename>')
-def serve_iso(filename):
-    file_path = os.path.join(DOWNLOAD_FOLDER, filename)
-    if not os.path.exists(file_path):
-        return "File not found", 404
-
-    def generate():
-        with open(file_path, "rb") as f:
-            while chunk := f.read(8192):
-                yield chunk
-
-    return Response(generate(), headers={
-        "Content-Disposition": f"attachment; filename={filename}",
-        "Accept-Ranges": "bytes",
-        "Content-Type": "application/octet-stream"
-    })
 
 
 if __name__ == '__main__':

@@ -1,0 +1,68 @@
+<!doctype html>
+<title>IPMI Network File Server</title>
+<h1>IPMI Network File Server</h1>
+<style>
+    table, th, td {
+        border: 1px solid black;
+        border-collapse: collapse;
+    }
+
+    td {
+        padding: 4px
+    }
+</style>
+<div>
+    <p>This utility is to help serve external files within an otherwise isolated IPMI network, for use by BMCs to pull
+        updates or mount virtual media. This bastion host acts as a jump box or bastion, and has external network
+        access, and can download and serve .iso files from the internet within the local network. This is useful for
+        things like Virtual Media on BMCs like HP's ILO or Dell's IDRAC which can allow mounting an ISO from a web
+        server, which tends to be more performant than uploading a file through the virtual KVM interface.</p>
+    <p>This service is accessible to anyone on the IPMI network, and should never be used to store or transfer sensitive
+        information.</p>
+</div>
+<div>
+    <form method="post">
+        <input type="text" name="file_url" placeholder="Enter URL" required>
+        <button type="submit">Download</button>
+    </form>
+</div>
+<div>
+    <h3>Available Files:</h3>
+    <table>
+        <tr>
+            <td>
+                <b>Filename</b>
+            </td>
+            <td>
+                <b>Size</b>
+            </td>
+            <td>
+                <b>Status</b>
+            </td>
+            <td>
+                <b>Expiry</b>
+            </td>
+            <td>
+                <b>SHA256 Checksum</b>
+            </td>
+        </tr>
+        <tbody id="file-list">
+        </tbody>
+    </table>
+</div>
+<!--<a href='/iso/{filename}'>{filename}</a> ({round(size / 1000000)}MB) - {status} - Expires in {hours_left}h {minutes_left}m - SHA256: {sha256_hash}-->
+
+<h3>other services available</h3>
+<ul>
+    <!--<li>downloads.dell.com HTTP proxy (port 3355)-->
+</ul>
+<script>
+    function fetchFileList() {
+        fetch('/files').then(response => response.text()).then(data => {
+            document.getElementById('file-list').innerHTML = data;
+        });
+    }
+    //refresh page every 1s
+    setInterval(fetchFileList, 1000);
+    fetchFileList();
+</script>
